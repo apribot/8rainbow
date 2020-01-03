@@ -3,6 +3,9 @@
 #define LED_COUNT 8
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
+int mock[8][3];
+int current[8][3];
+
 void setup() {
   strip.begin();           
   strip.show();            
@@ -10,7 +13,11 @@ void setup() {
 }
 
 void loop() {
-  rainbowCycle(100);    
+  //rainbowCycle(100);    
+  for(int i=0; i<8; i++) {
+    blip(i);
+    fadeBlip(20);
+  }
 }
 
 
@@ -39,4 +46,76 @@ uint32_t Wheel(byte WheelPos) {
   }
   WheelPos -= 170;
   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+
+void blip(int point) {
+
+  int bright = 255;
+  int ray = point;
+  int iray = point;
+
+  mock[point][0] = 255;
+  mock[point][1] = 0;
+  mock[point][2] = 0;
+  
+  for (int i=1; i <= 4; i++) { 
+
+    iray =   (iray + (8 - 1)) % 8;
+    ray =    (ray + 1) % 8;
+    bright = bright / 3;
+
+    mock[ray][0] = 255;
+    mock[ray][1] = 0;
+    mock[ray][2] = 0;
+    mock[iray][0] = 255;
+    mock[iray][1] = 0;
+    mock[iray][2] = 0;
+  }
+}
+
+void fadeBlip(uint8_t wait) {
+  bool done = false;
+  while(done == false) {
+    for(int i=0; i< strip.numPixels(); i++) {
+          
+      int r = current[i][0];
+      int g = current[i][1];
+      int b = current[i][2];
+    
+      if (r < mock[i][0]) {
+        r++;
+        done = false;
+      }
+      if (g < mock[i][1]) {
+        g++;
+        done = false;
+      }
+      if (b < mock[i][2]) {
+        b++;
+        done = false;
+      }
+    
+      if (r > mock[i][0]) {
+        r--;
+        done = false;
+      }
+      if (g > mock[i][1]) {
+        g--;
+        done = false;
+      }
+      if (b > mock[i][2]) {
+        b--;
+        done = false;
+      }
+
+      current[i][0] = r;
+      current[i][1] = g;
+      current[i][2] = b;
+      strip.setPixelColor(i, r, g, b);
+    }
+    strip.show();
+    delay(wait);
+
+  }
 }
